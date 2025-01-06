@@ -76,16 +76,6 @@ export const Archive: Block = {
       defaultValue: 10,
       label: 'Limit',
     },
-    {
-      name: 'selectedDocs',
-      type: 'relationship',
-      admin: {
-        condition: (_, siblingData) => siblingData.populateBy === 'selection',
-      },
-      hasMany: true,
-      label: 'Selection',
-      relationTo: ['posts'],
-    },
   ],
   labels: {
     plural: 'Archives',

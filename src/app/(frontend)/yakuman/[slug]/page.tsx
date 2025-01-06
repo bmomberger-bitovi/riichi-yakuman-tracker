@@ -1,24 +1,25 @@
 import type { Metadata } from 'next'
 
-import { RelatedPosts } from '@/blocks/RelatedPosts/Component'
 import { PayloadRedirects } from '@/components/PayloadRedirects'
 import configPromise from '@payload-config'
 import { getPayload } from 'payload'
 import { draftMode } from 'next/headers'
 import React, { cache } from 'react'
-import RichText from '@/components/RichText'
 
-import type { Post } from '@/payload-types'
-
-import { PostHero } from '@/heros/PostHero'
 import { generateMeta } from '@/utilities/generateMeta'
 import PageClient from './page.client'
 import { LivePreviewListener } from '@/components/LivePreviewListener'
+import { ContentBlock } from '@/blocks/Content/Component'
+import { MediaBlock } from '@/blocks/MediaBlock/Component'
+import { YakumanAchievement } from '@/payload-types'
+import { formatDateTime } from '@/utilities/formatDateTime'
+import { CMSLink } from '@/components/Link'
 
 export async function generateStaticParams() {
   const payload = await getPayload({ config: configPromise })
   const posts = await payload.find({
-    collection: 'posts',
+    collection: 'yakuman',
+    depth: 1,
     draft: false,
     limit: 1000,
     overrideAccess: false,
@@ -41,54 +42,65 @@ type Args = {
   }>
 }
 
-export default async function Post({ params: paramsPromise }: Args) {
+export default async function Yakuman({ params: paramsPromise }: Args) {
   const { isEnabled: draft } = await draftMode()
   const { slug = '' } = await paramsPromise
   const url = '/posts/' + slug
-  const post = await queryPostBySlug({ slug })
+  const yakuman = await queryYakumanBySlug({ slug })
 
-  if (!post) return <PayloadRedirects url={url} />
+  if (!yakuman) return <PayloadRedirects url={url} />
 
   return (
+    <>
+    <CMSLink url="/" className='ms-6'>Go Back</CMSLink>
     <article className="pt-16 pb-16">
       <PageClient />
+
+
+      <h2 className='text-3xl text-center mb-12 font-bold'>Yakuman: {yakuman.title}</h2>
+
+      {yakuman.heroImage && (
+        <MediaBlock blockType='mediaBlock' media={yakuman.heroImage} />
+      )}
+
+      <ContentBlock blockType='content' columns={[
+        { size: "full", richText: yakuman.content}]} />
+
+      {yakuman.yakumanAchievements?.docs?.length ? (
+        <>
+          <h3 className="text-xxl text-center mb-8 font-bold">Dates I achieved this Yakuman</h3>
+          <ul className='text-center'>
+            {yakuman.yakumanAchievements?.docs?.map((achievement, index) => (
+              <li key={index}>{formatDateTime((achievement as YakumanAchievement).date)}</li>
+            ))}
+          </ul>
+        </>
+      ) : null}
 
       {/* Allows redirects for valid pages too */}
       <PayloadRedirects disableNotFound url={url} />
 
       {draft && <LivePreviewListener />}
 
-      <PostHero post={post} />
-
-      <div className="flex flex-col items-center gap-4 pt-8">
-        <div className="container">
-          <RichText className="max-w-[48rem] mx-auto" data={post.content} enableGutter={false} />
-          {post.relatedPosts && post.relatedPosts.length > 0 && (
-            <RelatedPosts
-              className="mt-12 max-w-[52rem] lg:grid lg:grid-cols-subgrid col-start-1 col-span-3 grid-rows-[2fr]"
-              docs={post.relatedPosts.filter((post) => typeof post === 'object')}
-            />
-          )}
-        </div>
-      </div>
     </article>
+    </>
   )
 }
 
 export async function generateMetadata({ params: paramsPromise }: Args): Promise<Metadata> {
   const { slug = '' } = await paramsPromise
-  const post = await queryPostBySlug({ slug })
+  const post = await queryYakumanBySlug({ slug })
 
   return generateMeta({ doc: post })
 }
 
-const queryPostBySlug = cache(async ({ slug }: { slug: string }) => {
+const queryYakumanBySlug = cache(async ({ slug }: { slug: string }) => {
   const { isEnabled: draft } = await draftMode()
 
   const payload = await getPayload({ config: configPromise })
 
   const result = await payload.find({
-    collection: 'posts',
+    collection: 'yakuman',
     draft,
     limit: 1,
     overrideAccess: draft,
@@ -98,6 +110,9 @@ const queryPostBySlug = cache(async ({ slug }: { slug: string }) => {
         equals: slug,
       },
     },
+    populate: { 'yakuman-achievements': {
+      'date': true
+    } }
   })
 
   return result.docs?.[0] || null
