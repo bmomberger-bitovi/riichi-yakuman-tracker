@@ -115,6 +115,8 @@ export const Yakuman: CollectionConfig<'yakuman'> = {
                 position: 'sidebar',
               },
               hasMany: true,
+              // @ts-expect-error
+              targetField: {}
             },
             {
               name: 'categories',

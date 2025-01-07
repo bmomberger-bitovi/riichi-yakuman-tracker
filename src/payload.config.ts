@@ -65,7 +65,6 @@ export default buildConfig({
     pool: {
       connectionString: process.env.DATABASE_URI || '',
     },
-    schemaName: process.env.VERCEL_PROJECT_PRODUCTION_URL ? 'public' : undefined
   }),
   collections: [Pages, Yakuman, YakumanAchievements, Media, Categories, Users],
   cors: [getServerSideURL()].filter(Boolean),
