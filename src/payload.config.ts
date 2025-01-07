@@ -65,6 +65,7 @@ export default buildConfig({
     pool: {
       connectionString: process.env.DATABASE_URI || '',
     },
+    schemaName: 'public'
   }),
   collections: [Pages, Yakuman, YakumanAchievements, Media, Categories, Users],
   cors: [getServerSideURL()].filter(Boolean),
