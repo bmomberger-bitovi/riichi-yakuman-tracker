@@ -17,7 +17,7 @@ export default async function Page() {
   const yakuman = await payload.find({
     collection: 'yakuman',
     depth: 0,
-    limit: 12,
+    limit: 20,
     overrideAccess: false,
     select: {
       title: true,
